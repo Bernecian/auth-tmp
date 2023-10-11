@@ -1,13 +1,15 @@
 import { ReactNode } from "react";
 
 export type AuthState = {
-  isAuthenticated: boolean;
+  authLoading: boolean;
+  authError: string | null;
+  isAuth: boolean;
 };
 
 export type AuthAction =
-  | { type: "LOGIN"; payload: UserData }
-  | { type: "LOGOUT" }
-  | { type: "SET_AUTH_STATE"; payload: boolean };
+  | { type: "SET_IS_AUTH"; payload: boolean }
+  | { type: "SET_AUTH_LOADING"; payload: boolean }
+  | { type: "SET_AUTH_ERROR"; payload: string | null };
 
 export type UserData = { username: string; password: string };
 

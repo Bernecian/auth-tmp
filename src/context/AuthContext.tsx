@@ -1,4 +1,4 @@
-import { createContext, useReducer, useEffect } from "react";
+import { createContext, useReducer } from "react";
 import type {
   AuthState,
   AuthAction,
@@ -6,33 +6,39 @@ import type {
   AuthProviderProps,
   UserData,
 } from "./types";
+import LocalStorageService from "../services/localStorage";
 
 const authReducer = (state: AuthState, action: AuthAction): AuthState => {
   switch (action.type) {
-    case "LOGIN":
-      const { username, password } = action.payload;
-      const isCredentialsCorrect = username === "Test" && password === "123";
+    case "SET_IS_AUTH":
+      return {
+        ...state,
+        isAuth: action.payload,
+      };
 
-      if (isCredentialsCorrect) {
-        localStorage.setItem("isAuthenticated", JSON.stringify(true));
-      }
+    case "SET_AUTH_LOADING":
+      return {
+        ...state,
+        authLoading: action.payload,
+      };
 
-      return { isAuthenticated: isCredentialsCorrect };
+    case "SET_AUTH_ERROR":
+      return {
+        ...state,
+        authError: action.payload,
+      };
 
-    case "SET_AUTH_STATE":
-      return { isAuthenticated: action.payload };
-
-    case "LOGOUT":
-      localStorage.removeItem("isAuthenticated");
-
-      return { isAuthenticated: false };
     default:
       return state;
   }
 };
 
+const { removeToken, setToken, getToken } = LocalStorageService;
+
 const initialState: AuthState = {
-  isAuthenticated: false,
+  isAuth: !!getToken(),
+  authError: null,
+  authLoading: false,
 };
 
 export const AuthContext = createContext<AuthContextType>({
@@ -43,20 +49,31 @@ export const AuthContext = createContext<AuthContextType>({
 
 const AuthProvider = ({ children }: AuthProviderProps) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
-
-  useEffect(() => {
-    const storedAuth = localStorage.getItem("isAuthenticated");
-    const isAuth = storedAuth ? JSON.parse(storedAuth) : false;
-
-    dispatch({ type: "SET_AUTH_STATE", payload: isAuth });
-  }, []);
-
   const login = (userData: UserData) => {
-    dispatch({ type: "LOGIN", payload: userData });
+    try {
+      dispatch({ type: "SET_AUTH_LOADING", payload: true });
+      const { username, password } = userData;
+      if (username === "Test" && password === "123") {
+        dispatch({ type: "SET_IS_AUTH", payload: true });
+        dispatch({ type: "SET_AUTH_ERROR", payload: null });
+        setToken("sometoken");
+      } else {
+        throw new Error("Wrong credentials");
+      }
+    } catch (error) {
+      if (error instanceof Error) {
+        dispatch({ type: "SET_AUTH_ERROR", payload: error.message });
+      } else {
+        dispatch({ type: "SET_AUTH_ERROR", payload: "Unexpected error" });
+      }
+    } finally {
+      dispatch({ type: "SET_AUTH_LOADING", payload: false });
+    }
   };
 
   const logout = () => {
-    dispatch({ type: "LOGOUT" });
+    removeToken();
+    dispatch({ type: "SET_IS_AUTH", payload: false });
   };
 
   return (

@@ -19,4 +19,8 @@ export const Container = styled.div`
   Heading = styled.h2`
     font-size: 24px;
     font-weight: 400;
-  `;
+  `,
+  ErrorMessage = styled.span`
+    color: red;
+  `,
+  Loader = styled.span``;

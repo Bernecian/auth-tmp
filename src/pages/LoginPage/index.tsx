@@ -5,7 +5,7 @@ import { useNavigate } from "react-router-dom";
 
 const LoginPage = () => {
   const { state, login } = useContext(AuthContext);
-  const { isAuthenticated } = state;
+  const { isAuth, authError, authLoading } = state;
   const [userData, setUserData] = useState({ username: "", password: "" });
   const navigate = useNavigate();
 
@@ -22,17 +22,21 @@ const LoginPage = () => {
   };
 
   useEffect(() => {
-    if (isAuthenticated) {
+    if (isAuth) {
       navigate("/");
     }
-  }, [isAuthenticated]);
+  }, [isAuth, navigate]);
 
   return (
     <Styles.Container>
       <Styles.Heading>Login</Styles.Heading>
       <Styles.Input onChange={handleUsernameChange} />
       <Styles.Input type="password" onChange={handlePasswordChange} />
-      <Styles.Button onClick={handleLogin}>Login</Styles.Button>
+      <Styles.Button disabled={authLoading} onClick={handleLogin}>
+        Login
+      </Styles.Button>
+      {authLoading ? <Styles.Loader>Loading...</Styles.Loader> : null}
+      <Styles.ErrorMessage>{authError}</Styles.ErrorMessage>
     </Styles.Container>
   );
 };
